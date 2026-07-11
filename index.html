@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#12200f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<title>Lineup Board</title>
+<style>
+  :root{
+    --night:#12200f; --panel:#1c2f18; --panel2:#243a1e; --ink:#f2eee0;
+    --accent:#f6c445; --danger:#e07856; --chalk:#f6f2e6; --dim:#93a789;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--night); color:var(--ink);
+    font-family:'Arial Narrow', system-ui, sans-serif;}
+  button{font-family:inherit;}
+  .wrap{max-width:520px; margin:0 auto; padding:10px 10px 40px;}
+  h1{font-size:26px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+    margin:4px 2px 2px; color:var(--accent);}
+  .sub{font-size:15px; opacity:.75; margin:0 2px 10px; font-weight:500;}
+
+  /* selection banner */
+  #banner{min-height:34px; margin-bottom:8px; border-radius:10px; padding:6px 12px;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    font-weight:700; font-size:15px; letter-spacing:.5px;
+    border:1px dashed #486340; color:var(--dim);}
+  #banner.active{background:var(--accent); color:#2c250a; border:none;}
+  #banner .btns{display:flex; gap:6px;}
+  #banner .btns button{background:#2c250a; color:var(--accent); border:none;
+    border-radius:8px; padding:3px 10px; font-weight:700; font-size:13px;}
+  #banner .txt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+  /* field */
+  .field{position:relative; width:100%; aspect-ratio:100/96; border-radius:12px;
+    overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,.45);}
+  .field svg{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .slot{position:absolute; transform:translate(-50%,-50%); z-index:2;
+    background:transparent; border:none; padding:4px; display:flex;
+    flex-direction:column; align-items:center; gap:2px; cursor:pointer;}
+  .slot .tag{font-weight:600; font-size:12px; letter-spacing:1px; color:var(--chalk);
+    background:rgba(0,0,0,.28); padding:1px 7px; border-radius:8px;}
+  .slot .spot{width:34px; height:34px; border-radius:50%;
+    border:2px dashed rgba(246,242,230,.85); background:rgba(0,0,0,.10);}
+  .slot .chip{max-width:84px; padding:5px 9px; border-radius:16px; background:var(--chalk);
+    color:#22381c; font-weight:700; font-size:14px; letter-spacing:.5px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    box-shadow:0 2px 5px rgba(0,0,0,.4);}
+  body.targeting .slot .spot{border-color:var(--accent); background:rgba(246,196,69,.35);}
+  body.targeting .slot .chip{outline:3px solid var(--accent);}
+  .slot .chip.sel{background:var(--accent); outline:none !important;}
+
+  /* panel */
+  .panel{margin-top:12px; background:var(--panel); border-radius:12px; padding:12px;}
+  .panel h2{margin:0 0 8px; font-size:17px; font-weight:700; letter-spacing:1.5px;
+    text-transform:uppercase; color:var(--accent);}
+  .addrow{display:flex; gap:8px; margin-bottom:10px;}
+  .addrow input{flex:1; min-width:0; background:var(--panel2); border:1px solid #3a5530;
+    color:var(--ink); border-radius:10px; padding:11px 12px; font-size:17px;
+    font-family:inherit; font-weight:500; outline:none;}
+  .addrow input::placeholder{color:var(--dim);}
+  .addrow button{background:var(--accent); color:#2c250a; border:none; border-radius:10px;
+    padding:0 18px; font-size:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase;}
+  .addrow button:active{transform:scale(.96);}
+
+  .row{display:flex; align-items:center; gap:6px; background:var(--panel2);
+    border-radius:10px; padding:6px 8px; margin-bottom:6px;}
+  .row.dragging{background:#33502a; opacity:.85;}
+  .row.sel{outline:2px solid var(--accent);}
+  .row .handle{font-size:20px; color:#8ea883; padding:2px 6px; cursor:grab;
+    touch-action:none; user-select:none;}
+  .row .num{width:22px; text-align:center; font-weight:700; font-size:17px; color:var(--accent);}
+  .row .pname{flex:1; min-width:0; font-size:18px; font-weight:600; letter-spacing:.5px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:6px 0; cursor:pointer;}
+  .row.sel .pname{color:var(--accent);}
+  .row .badge{font-size:13px; font-weight:700; letter-spacing:1px; border-radius:8px;
+    padding:3px 8px; background:#38542c; color:var(--chalk);}
+  .row .badge.none{background:transparent; color:#7d9472; border:1px dashed #55704a;}
+  .row .arrow, .row .del{background:none; border:none; font-size:18px; padding:2px 4px;}
+  .row .arrow{color:var(--dim);}
+  .row .arrow:disabled{color:#4a6142;}
+  .row .del{color:var(--danger);}
+  .empty{text-align:center; color:#7d9472; font-size:16px; padding:14px 0; font-weight:500;}
+  .clearbtn{margin-top:8px; width:100%; background:transparent; border:1px solid #486340;
+    color:#a9bd9e; border-radius:10px; padding:9px; font-size:14px; font-weight:600;
+    letter-spacing:1px; text-transform:uppercase;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Lineup Board</h1>
+  <p class="sub">Tap a name, then tap a spot on the field. Reorder batting with the arrows or by dragging ≡.</p>
+
+  <div id="banner"><span class="txt">No player selected</span></div>
+
+  <div class="field" id="field">
+    <svg viewBox="0 0 100 96" preserveAspectRatio="none" aria-hidden="true">
+      <rect width="100" height="96" fill="#2f7d46"/>
+      <rect y="0" width="100" height="8" fill="#28703e"/>
+      <rect y="16" width="100" height="8" fill="#28703e"/>
+      <rect y="32" width="100" height="8" fill="#28703e"/>
+      <circle cx="50" cy="66" r="28" fill="#c08447"/>
+      <path d="M50 87 L72 65 L50 43 L28 65 Z" fill="none" stroke="#f6f2e6" stroke-width="1"/>
+      <line x1="50" y1="87" x2="4" y2="41" stroke="#f6f2e6" stroke-width="1"/>
+      <line x1="50" y1="87" x2="96" y2="41" stroke="#f6f2e6" stroke-width="1"/>
+      <circle cx="50" cy="66" r="5.5" fill="#b2763a" stroke="#f6f2e6" stroke-width=".7"/>
+      <rect x="70" y="63" width="4" height="4" fill="#f6f2e6" transform="rotate(45 72 65)"/>
+      <rect x="48" y="41" width="4" height="4" fill="#f6f2e6" transform="rotate(45 50 43)"/>
+      <rect x="26" y="63" width="4" height="4" fill="#f6f2e6" transform="rotate(45 28 65)"/>
+      <path d="M48 85 L52 85 L52 87.5 L50 89.5 L48 87.5 Z" fill="#f6f2e6"/>
+    </svg>
+  </div>
+
+  <div class="panel">
+    <h2>Roster · Batting Order</h2>
+    <div class="addrow">
+      <input id="nameInput" type="text" placeholder="Player name" autocomplete="off">
+      <button id="addBtn">Add</button>
+    </div>
+    <div id="roster"></div>
+    <button class="clearbtn" id="clearBtn" style="display:none">Clear all positions</button>
+  </div>
+</div>
+
+<script>
+var POSITIONS = [
+  {key:'P',  x:50, y:72}, {key:'C',  x:50, y:92},
+  {key:'1B', x:79, y:59}, {key:'2B', x:63, y:47},
+  {key:'SS', x:37, y:47}, {key:'3B', x:21, y:59},
+  {key:'LF', x:13, y:26}, {key:'LC', x:37, y:12},
+  {key:'RC', x:63, y:12}, {key:'RF', x:87, y:26},
+];
+
+var players = [];   // [{id, name, pos}]
+var nextId = 1;
+var selected = null; // player id awaiting a position
+var dragId = null;   // row being reordered
+
+var field = document.getElementById('field');
+var roster = document.getElementById('roster');
+var banner = document.getElementById('banner');
+var nameInput = document.getElementById('nameInput');
+var clearBtn = document.getElementById('clearBtn');
+
+/* ---------- persistence (localStorage) ---------- */
+function save(){
+  try{ localStorage.setItem('softball-lineup', JSON.stringify({players:players, nextId:nextId})); }
+  catch(e){}
+}
+function load(){
+  try{
+    var raw = localStorage.getItem('softball-lineup');
+    if(raw){ var d = JSON.parse(raw); players = d.players||[]; nextId = d.nextId||1; }
+  }catch(e){}
+}
+
+/* ---------- helpers ---------- */
+function findById(id){ for(var i=0;i<players.length;i++){ if(players[i].id===id) return players[i]; } return null; }
+function occupantOf(key){ for(var i=0;i<players.length;i++){ if(players[i].pos===key) return players[i]; } return null; }
+
+/* ---------- build field slots ---------- */
+POSITIONS.forEach(function(pos){
+  var b = document.createElement('button');
+  b.className = 'slot';
+  b.dataset.pos = pos.key;
+  b.style.left = pos.x+'%';
+  b.style.top = pos.y+'%';
+  b.innerHTML = '<span class="tag">'+pos.key+'</span><span class="spot"></span>';
+  b.addEventListener('click', function(){ tapSlot(pos.key); });
+  field.appendChild(b);
+});
+
+/* ---------- render ---------- */
+function render(){
+  document.body.classList.toggle('targeting', selected!==null);
+
+  // banner
+  var sel = selected!==null ? findById(selected) : null;
+  if(sel){
+    banner.className = 'active';
+    banner.innerHTML = '<span class="txt"></span><span class="btns">'+
+      (sel.pos ? '<button id="benchBtn">Bench</button>' : '')+
+      '<button id="cancelBtn">Cancel</button></span>';
+    banner.querySelector('.txt').textContent = sel.name + ' — tap a position';
+    var bb = document.getElementById('benchBtn');
+    if(bb) bb.addEventListener('click', function(){ sel.pos=null; selected=null; render(); save(); });
+    document.getElementById('cancelBtn').addEventListener('click', function(){ selected=null; render(); });
+  }else{
+    banner.className = '';
+    banner.innerHTML = '<span class="txt">No player selected</span>';
+  }
+
+  // field chips
+  document.querySelectorAll('.slot').forEach(function(slot){
+    var occ = occupantOf(slot.dataset.pos);
+    var holder = slot.querySelector('.spot, .chip');
+    var el;
+    if(occ){
+      el = document.createElement('span');
+      el.className = 'chip' + (selected===occ.id ? ' sel' : '');
+      el.textContent = occ.name;
+    }else{
+      el = document.createElement('span');
+      el.className = 'spot';
+    }
+    holder.replaceWith(el);
+  });
+
+  // roster
+  roster.innerHTML = '';
+  if(players.length===0){
+    roster.innerHTML = '<div class="empty">No players yet — add your first hitter above.</div>';
+  }
+  players.forEach(function(p, i){
+    var row = document.createElement('div');
+    row.className = 'row' + (selected===p.id ? ' sel' : '') + (dragId===p.id ? ' dragging' : '');
+    row.dataset.rowid = p.id;
+
+    var handle = document.createElement('span');
+    handle.className = 'handle'; handle.textContent = '≡';
+    handle.addEventListener('pointerdown', function(e){
+      handle.setPointerCapture(e.pointerId);
+      dragId = p.id;
+      row.classList.add('dragging');
+    });
+
+    var num = document.createElement('span');
+    num.className = 'num'; num.textContent = i+1;
+
+    var pname = document.createElement('span');
+    pname.className = 'pname'; pname.textContent = p.name;
+    pname.addEventListener('click', function(){
+      selected = (selected===p.id) ? null : p.id;
+      render();
+    });
+
+    var badge = document.createElement('span');
+    badge.className = 'badge' + (p.pos ? '' : ' none');
+    badge.textContent = p.pos || '—';
+
+    var up = document.createElement('button');
+    up.className='arrow'; up.textContent='▲'; up.disabled = (i===0);
+    up.addEventListener('click', function(){ moveRow(p.id,-1); });
+
+    var down = document.createElement('button');
+    down.className='arrow'; down.textContent='▼'; down.disabled = (i===players.length-1);
+    down.addEventListener('click', function(){ moveRow(p.id,1); });
+
+    var del = document.createElement('button');
+    del.className='del'; del.textContent='✕';
+    del.addEventListener('click', function(){
+      players = players.filter(function(x){ return x.id!==p.id; });
+      if(selected===p.id) selected=null;
+      render(); save();
+    });
+
+    row.appendChild(handle); row.appendChild(num); row.appendChild(pname);
+    row.appendChild(badge); row.appendChild(up); row.appendChild(down); row.appendChild(del);
+    roster.appendChild(row);
+  });
+
+  clearBtn.style.display = players.length>0 ? 'block' : 'none';
+}
+
+/* ---------- actions ---------- */
+function addPlayer(){
+  var n = nameInput.value.trim();
+  if(!n) return;
+  players.push({id:nextId++, name:n, pos:null});
+  nameInput.value = '';
+  nameInput.focus();
+  render(); save();
+}
+document.getElementById('addBtn').addEventListener('click', addPlayer);
+nameInput.addEventListener('keydown', function(e){ if(e.key==='Enter') addPlayer(); });
+
+function tapSlot(key){
+  var occ = occupantOf(key);
+  if(selected!==null){
+    var sel = findById(selected);
+    if(sel){
+      var oldPos = sel.pos;
+      sel.pos = key;
+      if(occ && occ.id!==sel.id) occ.pos = oldPos; // swap, or bench if sel had no spot
+    }
+    selected = null;
+    render(); save();
+  }else if(occ){
+    selected = occ.id; // pick up whoever's there
+    render();
+  }
+}
+
+function moveRow(id, dir){
+  var i = players.findIndex(function(x){ return x.id===id; });
+  var j = i + dir;
+  if(i<0 || j<0 || j>=players.length) return;
+  var t = players[i]; players[i] = players[j]; players[j] = t;
+  render(); save();
+}
+
+clearBtn.addEventListener('click', function(){
+  players.forEach(function(p){ p.pos=null; });
+  selected = null;
+  render(); save();
+});
+
+/* ---------- drag-to-reorder ---------- */
+document.addEventListener('pointermove', function(e){
+  if(dragId===null) return;
+  var el = document.elementFromPoint(e.clientX, e.clientY);
+  var row = el && el.closest ? el.closest('.row') : null;
+  if(!row) return;
+  var overId = Number(row.dataset.rowid);
+  if(overId===dragId) return;
+  var from = players.findIndex(function(x){ return x.id===dragId; });
+  var to = players.findIndex(function(x){ return x.id===overId; });
+  if(from<0 || to<0) return;
+  var m = players.splice(from,1)[0];
+  players.splice(to,0,m);
+  render();
+});
+document.addEventListener('pointerup', function(){
+  if(dragId===null) return;
+  dragId = null;
+  render(); save();
+});
+
+load();
+render();
+
+/* ---------- offline support ---------- */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+</script>
+</body>
+</html>
