@@ -22,6 +22,12 @@
   h1{font-size:26px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
     margin:4px 2px 2px; color:var(--accent);}
   .sub{font-size:15px; opacity:.75; margin:0 2px 10px; font-weight:500;}
+  .topbtns{display:flex; gap:8px; margin-bottom:10px;}
+  .topbtns button{flex:1; border:none; border-radius:10px; padding:11px; font-size:15px;
+    font-weight:700; letter-spacing:1px; text-transform:uppercase;}
+  .btn-gold{background:var(--accent); color:#2c250a;}
+  .btn-ghost{background:transparent; color:#a9bd9e; border:1px solid #486340 !important;}
+  .btn-red{background:transparent; color:var(--danger); border:1px solid #6b4032 !important;}
 
   /* selection banner */
   #banner{min-height:34px; margin-bottom:8px; border-radius:10px; padding:6px 12px;
@@ -70,6 +76,7 @@
     border-radius:10px; padding:6px 8px; margin-bottom:6px;}
   .row.dragging{background:#33502a; opacity:.85;}
   .row.sel{outline:2px solid var(--accent);}
+  .row.now{outline:2px solid var(--accent); background:#33502a;}
   .row .handle{font-size:20px; color:#8ea883; padding:2px 6px; cursor:grab;
     touch-action:none; user-select:none;}
   .row .num{width:22px; text-align:center; font-weight:700; font-size:17px; color:var(--accent);}
@@ -79,51 +86,47 @@
   .row .badge{font-size:13px; font-weight:700; letter-spacing:1px; border-radius:8px;
     padding:3px 8px; background:#38542c; color:var(--chalk);}
   .row .badge.none{background:transparent; color:#7d9472; border:1px dashed #55704a;}
+  .row .line{font-size:14px; font-weight:600; color:var(--dim);}
   .row .arrow, .row .del{background:none; border:none; font-size:18px; padding:2px 4px;}
   .row .arrow{color:var(--dim);}
   .row .arrow:disabled{color:#4a6142;}
   .row .del{color:var(--danger);}
   .empty{text-align:center; color:#7d9472; font-size:16px; padding:14px 0; font-weight:500;}
-  .clearbtn{margin-top:8px; width:100%; background:transparent; border:1px solid #486340;
+  .fullbtn{margin-top:8px; width:100%; background:transparent; border:1px solid #486340;
     color:#a9bd9e; border-radius:10px; padding:9px; font-size:14px; font-weight:600;
     letter-spacing:1px; text-transform:uppercase;}
+
+  /* game mode */
+  .nowcard{background:var(--panel); border-radius:12px; padding:14px; margin-bottom:10px;
+    border:2px solid var(--accent);}
+  .nowcard .lbl{font-size:13px; font-weight:700; letter-spacing:2px; color:var(--accent);
+    text-transform:uppercase;}
+  .nowcard .bname{font-size:32px; font-weight:700; letter-spacing:.5px; margin:2px 0;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .nowcard .meta{font-size:15px; color:var(--dim); font-weight:600;}
+  .nowcard .ondeck{margin-top:8px; font-size:15px; color:var(--ink); font-weight:600;}
+  .nowcard .ondeck b{color:var(--accent); font-weight:700; letter-spacing:1px; font-size:13px;}
+  .resgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:8px;}
+  .resgrid button{padding:16px 0; border:none; border-radius:12px; font-size:19px;
+    font-weight:700; letter-spacing:1px; background:var(--chalk); color:#22381c;}
+  .resgrid button:active{transform:scale(.95);}
+  .resgrid .out{background:#5a3a30; color:var(--chalk);}
+  .resgrid .hr{background:var(--accent);}
+
+  /* stats table */
+  table{width:100%; border-collapse:collapse;}
+  th{font-size:13px; font-weight:700; letter-spacing:1px; color:var(--accent);
+    text-transform:uppercase; text-align:right; padding:6px 4px; border-bottom:1px solid #3a5530;}
+  th:first-child{text-align:left;}
+  td{font-size:16px; font-weight:600; text-align:right; padding:8px 4px;
+    border-bottom:1px solid #2a4022;}
+  td:first-child{text-align:left; max-width:110px; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap;}
+  td.avg{color:var(--accent); font-weight:700;}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Lineup Board</h1>
-  <p class="sub">Tap a name, then tap a spot on the field. Reorder batting with the arrows or by dragging ≡.</p>
-
-  <div id="banner"><span class="txt">No player selected</span></div>
-
-  <div class="field" id="field">
-    <svg viewBox="0 0 100 96" preserveAspectRatio="none" aria-hidden="true">
-      <rect width="100" height="96" fill="#2f7d46"/>
-      <rect y="0" width="100" height="8" fill="#28703e"/>
-      <rect y="16" width="100" height="8" fill="#28703e"/>
-      <rect y="32" width="100" height="8" fill="#28703e"/>
-      <circle cx="50" cy="66" r="28" fill="#c08447"/>
-      <path d="M50 87 L72 65 L50 43 L28 65 Z" fill="none" stroke="#f6f2e6" stroke-width="1"/>
-      <line x1="50" y1="87" x2="4" y2="41" stroke="#f6f2e6" stroke-width="1"/>
-      <line x1="50" y1="87" x2="96" y2="41" stroke="#f6f2e6" stroke-width="1"/>
-      <circle cx="50" cy="66" r="5.5" fill="#b2763a" stroke="#f6f2e6" stroke-width=".7"/>
-      <rect x="70" y="63" width="4" height="4" fill="#f6f2e6" transform="rotate(45 72 65)"/>
-      <rect x="48" y="41" width="4" height="4" fill="#f6f2e6" transform="rotate(45 50 43)"/>
-      <rect x="26" y="63" width="4" height="4" fill="#f6f2e6" transform="rotate(45 28 65)"/>
-      <path d="M48 85 L52 85 L52 87.5 L50 89.5 L48 87.5 Z" fill="#f6f2e6"/>
-    </svg>
-  </div>
-
-  <div class="panel">
-    <h2>Roster · Batting Order</h2>
-    <div class="addrow">
-      <input id="nameInput" type="text" placeholder="Player name" autocomplete="off">
-      <button id="addBtn">Add</button>
-    </div>
-    <div id="roster"></div>
-    <button class="clearbtn" id="clearBtn" style="display:none">Clear all positions</button>
-  </div>
-</div>
+<div class="wrap" id="app"></div>
 
 <script>
 var POSITIONS = [
@@ -133,150 +136,331 @@ var POSITIONS = [
   {key:'LF', x:13, y:26}, {key:'LC', x:37, y:12},
   {key:'RC', x:63, y:12}, {key:'RF', x:87, y:26},
 ];
+var RESULTS = [
+  {key:'b1', label:'1B', hit:true,  ab:true},
+  {key:'b2', label:'2B', hit:true,  ab:true},
+  {key:'b3', label:'3B', hit:true,  ab:true},
+  {key:'hr', label:'HR', hit:true,  ab:true},
+  {key:'bb', label:'BB', hit:false, ab:false},
+  {key:'out',label:'OUT',hit:false, ab:true},
+];
 
-var players = [];   // [{id, name, pos}]
-var nextId = 1;
-var selected = null; // player id awaiting a position
-var dragId = null;   // row being reordered
+var S = {
+  players: [],   // [{id, name, pos}]
+  nextId: 1,
+  stats: {},     // id -> {name, g, ab, h, hr, bb}
+  game: null,    // {order:[ids], idx, log:[{id, res, idx}]}
+};
+var view = 'setup';   // setup | game | stats
+var selected = null;
+var dragId = null;
 
-var field = document.getElementById('field');
-var roster = document.getElementById('roster');
-var banner = document.getElementById('banner');
-var nameInput = document.getElementById('nameInput');
-var clearBtn = document.getElementById('clearBtn');
-
-/* ---------- persistence (localStorage) ---------- */
+/* ---------- persistence ---------- */
 function save(){
-  try{ localStorage.setItem('softball-lineup', JSON.stringify({players:players, nextId:nextId})); }
-  catch(e){}
+  try{ localStorage.setItem('softball-lineup-v2', JSON.stringify(S)); }catch(e){}
 }
 function load(){
   try{
-    var raw = localStorage.getItem('softball-lineup');
-    if(raw){ var d = JSON.parse(raw); players = d.players||[]; nextId = d.nextId||1; }
+    var raw = localStorage.getItem('softball-lineup-v2');
+    if(raw){ S = JSON.parse(raw); }
+    else{
+      // migrate roster from the first version of the app
+      var old = localStorage.getItem('softball-lineup');
+      if(old){ var d = JSON.parse(old); S.players = d.players||[]; S.nextId = d.nextId||1; }
+    }
   }catch(e){}
+  if(!S.stats) S.stats = {};
+  if(S.game) view = 'game'; // resume a game if the phone locked mid-inning
 }
 
 /* ---------- helpers ---------- */
-function findById(id){ for(var i=0;i<players.length;i++){ if(players[i].id===id) return players[i]; } return null; }
-function occupantOf(key){ for(var i=0;i<players.length;i++){ if(players[i].pos===key) return players[i]; } return null; }
-
-/* ---------- build field slots ---------- */
-POSITIONS.forEach(function(pos){
-  var b = document.createElement('button');
-  b.className = 'slot';
-  b.dataset.pos = pos.key;
-  b.style.left = pos.x+'%';
-  b.style.top = pos.y+'%';
-  b.innerHTML = '<span class="tag">'+pos.key+'</span><span class="spot"></span>';
-  b.addEventListener('click', function(){ tapSlot(pos.key); });
-  field.appendChild(b);
-});
+function findById(id){ return S.players.find(function(p){ return p.id===id; }) || null; }
+function occupantOf(key){ return S.players.find(function(p){ return p.pos===key; }) || null; }
+function statFor(id, name){
+  if(!S.stats[id]) S.stats[id] = {name:name, g:0, ab:0, h:0, hr:0, bb:0};
+  if(name) S.stats[id].name = name;
+  return S.stats[id];
+}
+function avg(st){ return st.ab>0 ? ('.'+Math.round(st.h/st.ab*1000+'').padStart(3,'0')).replace('.1000','1.000') : '—'; }
+function fmtAvg(st){
+  if(st.ab===0) return '—';
+  var a = st.h/st.ab;
+  if(a>=1) return '1.000';
+  return a.toFixed(3).slice(1); // .667
+}
+function todayLine(id){
+  if(!S.game) return '';
+  var h=0, ab=0, hr=0;
+  S.game.log.forEach(function(e){
+    if(e.id!==id) return;
+    var r = RESULTS.find(function(x){ return x.key===e.res; });
+    if(r.ab) ab++;
+    if(r.hit) h++;
+    if(e.res==='hr') hr++;
+  });
+  if(ab===0 && h===0) return '0-0 today';
+  return h+'-'+ab+' today'+(hr?(' · '+hr+' HR'):'');
+}
 
 /* ---------- render ---------- */
+var app = document.getElementById('app');
+
 function render(){
-  document.body.classList.toggle('targeting', selected!==null);
+  document.body.classList.toggle('targeting', view==='setup' && selected!==null);
+  if(view==='setup') renderSetup();
+  else if(view==='game') renderGame();
+  else renderStats();
+}
+
+function el(tag, cls, txt){
+  var e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(txt!==undefined) e.textContent = txt;
+  return e;
+}
+
+/* ===================== SETUP VIEW ===================== */
+function renderSetup(){
+  app.innerHTML = '';
+  app.appendChild(el('h1', null, 'Lineup Board'));
+  app.appendChild(el('p', 'sub', 'Tap a name, then tap a spot. Arrows or ≡ set the batting order.'));
+
+  var top = el('div','topbtns');
+  var startB = el('button','btn-gold','⚾ Lock & Start Game');
+  startB.addEventListener('click', startGame);
+  var statsB = el('button','btn-ghost','Season Stats');
+  statsB.addEventListener('click', function(){ view='stats'; render(); });
+  top.appendChild(startB); top.appendChild(statsB);
+  app.appendChild(top);
 
   // banner
+  var banner = el('div'); banner.id='banner';
   var sel = selected!==null ? findById(selected) : null;
   if(sel){
-    banner.className = 'active';
-    banner.innerHTML = '<span class="txt"></span><span class="btns">'+
-      (sel.pos ? '<button id="benchBtn">Bench</button>' : '')+
-      '<button id="cancelBtn">Cancel</button></span>';
-    banner.querySelector('.txt').textContent = sel.name + ' — tap a position';
-    var bb = document.getElementById('benchBtn');
-    if(bb) bb.addEventListener('click', function(){ sel.pos=null; selected=null; render(); save(); });
-    document.getElementById('cancelBtn').addEventListener('click', function(){ selected=null; render(); });
-  }else{
-    banner.className = '';
-    banner.innerHTML = '<span class="txt">No player selected</span>';
-  }
-
-  // field chips
-  document.querySelectorAll('.slot').forEach(function(slot){
-    var occ = occupantOf(slot.dataset.pos);
-    var holder = slot.querySelector('.spot, .chip');
-    var el;
-    if(occ){
-      el = document.createElement('span');
-      el.className = 'chip' + (selected===occ.id ? ' sel' : '');
-      el.textContent = occ.name;
-    }else{
-      el = document.createElement('span');
-      el.className = 'spot';
+    banner.className='active';
+    var txt = el('span','txt', sel.name+' — tap a position');
+    var btns = el('span','btns');
+    if(sel.pos){
+      var bench = el('button',null,'Bench');
+      bench.addEventListener('click', function(){ sel.pos=null; selected=null; render(); save(); });
+      btns.appendChild(bench);
     }
-    holder.replaceWith(el);
-  });
-
-  // roster
-  roster.innerHTML = '';
-  if(players.length===0){
-    roster.innerHTML = '<div class="empty">No players yet — add your first hitter above.</div>';
+    var cancel = el('button',null,'Cancel');
+    cancel.addEventListener('click', function(){ selected=null; render(); });
+    btns.appendChild(cancel);
+    banner.appendChild(txt); banner.appendChild(btns);
+  }else{
+    banner.appendChild(el('span','txt','No player selected'));
   }
-  players.forEach(function(p, i){
-    var row = document.createElement('div');
-    row.className = 'row' + (selected===p.id ? ' sel' : '') + (dragId===p.id ? ' dragging' : '');
+  app.appendChild(banner);
+
+  // field
+  var field = el('div','field');
+  field.innerHTML = fieldSVG();
+  POSITIONS.forEach(function(pos){
+    var b = el('button','slot');
+    b.style.left = pos.x+'%'; b.style.top = pos.y+'%';
+    b.appendChild(el('span','tag',pos.key));
+    var occ = occupantOf(pos.key);
+    if(occ){
+      var chip = el('span','chip'+(selected===occ.id?' sel':''), occ.name);
+      b.appendChild(chip);
+    }else{
+      b.appendChild(el('span','spot'));
+    }
+    b.addEventListener('click', function(){ tapSlot(pos.key); });
+    field.appendChild(b);
+  });
+  app.appendChild(field);
+
+  // roster panel
+  var panel = el('div','panel');
+  panel.appendChild(el('h2',null,'Roster · Batting Order'));
+
+  var addrow = el('div','addrow');
+  var input = el('input'); input.type='text'; input.placeholder='Player name';
+  input.autocomplete='off'; input.id='nameInput';
+  input.addEventListener('keydown', function(e){ if(e.key==='Enter') addPlayer(); });
+  var addB = el('button',null,'Add');
+  addB.addEventListener('click', addPlayer);
+  addrow.appendChild(input); addrow.appendChild(addB);
+  panel.appendChild(addrow);
+
+  if(S.players.length===0){
+    panel.appendChild(el('div','empty','No players yet — add your first hitter above.'));
+  }
+  S.players.forEach(function(p, i){
+    var row = el('div','row'+(selected===p.id?' sel':'')+(dragId===p.id?' dragging':''));
     row.dataset.rowid = p.id;
 
-    var handle = document.createElement('span');
-    handle.className = 'handle'; handle.textContent = '≡';
+    var handle = el('span','handle','≡');
     handle.addEventListener('pointerdown', function(e){
       handle.setPointerCapture(e.pointerId);
-      dragId = p.id;
-      row.classList.add('dragging');
+      dragId = p.id; row.classList.add('dragging');
     });
-
-    var num = document.createElement('span');
-    num.className = 'num'; num.textContent = i+1;
-
-    var pname = document.createElement('span');
-    pname.className = 'pname'; pname.textContent = p.name;
+    var pname = el('span','pname', p.name);
     pname.addEventListener('click', function(){
-      selected = (selected===p.id) ? null : p.id;
-      render();
+      selected = (selected===p.id) ? null : p.id; render();
     });
-
-    var badge = document.createElement('span');
-    badge.className = 'badge' + (p.pos ? '' : ' none');
-    badge.textContent = p.pos || '—';
-
-    var up = document.createElement('button');
-    up.className='arrow'; up.textContent='▲'; up.disabled = (i===0);
+    var badge = el('span','badge'+(p.pos?'':' none'), p.pos||'—');
+    var up = el('button','arrow','▲'); up.disabled=(i===0);
     up.addEventListener('click', function(){ moveRow(p.id,-1); });
-
-    var down = document.createElement('button');
-    down.className='arrow'; down.textContent='▼'; down.disabled = (i===players.length-1);
+    var down = el('button','arrow','▼'); down.disabled=(i===S.players.length-1);
     down.addEventListener('click', function(){ moveRow(p.id,1); });
-
-    var del = document.createElement('button');
-    del.className='del'; del.textContent='✕';
+    var del = el('button','del','✕');
     del.addEventListener('click', function(){
-      players = players.filter(function(x){ return x.id!==p.id; });
+      S.players = S.players.filter(function(x){ return x.id!==p.id; });
       if(selected===p.id) selected=null;
       render(); save();
     });
 
-    row.appendChild(handle); row.appendChild(num); row.appendChild(pname);
-    row.appendChild(badge); row.appendChild(up); row.appendChild(down); row.appendChild(del);
-    roster.appendChild(row);
+    row.appendChild(handle); row.appendChild(el('span','num',''+(i+1)));
+    row.appendChild(pname); row.appendChild(badge);
+    row.appendChild(up); row.appendChild(down); row.appendChild(del);
+    panel.appendChild(row);
   });
 
-  clearBtn.style.display = players.length>0 ? 'block' : 'none';
+  if(S.players.length>0){
+    var clr = el('button','fullbtn','Clear all positions');
+    clr.addEventListener('click', function(){
+      S.players.forEach(function(p){ p.pos=null; });
+      selected=null; render(); save();
+    });
+    panel.appendChild(clr);
+  }
+  app.appendChild(panel);
 }
 
-/* ---------- actions ---------- */
+/* ===================== GAME VIEW ===================== */
+function renderGame(){
+  app.innerHTML = '';
+  var g = S.game;
+  var order = g.order.map(findById).filter(Boolean);
+  if(order.length===0){ S.game=null; view='setup'; render(); return; }
+  if(g.idx >= g.order.length) g.idx = 0;
+  var cur = findById(g.order[g.idx]);
+  var next = findById(g.order[(g.idx+1)%g.order.length]);
+
+  app.appendChild(el('h1', null, 'Game On'));
+  app.appendChild(el('p','sub','Tap the result of each at-bat. Tap a name below to jump the order.'));
+
+  // now batting card
+  var card = el('div','nowcard');
+  card.appendChild(el('div','lbl','Now Batting · #'+(g.idx+1)));
+  card.appendChild(el('div','bname', cur ? cur.name : '—'));
+  card.appendChild(el('div','meta', (cur&&cur.pos?cur.pos+' · ':'')+todayLine(cur?cur.id:-1)));
+  var od = el('div','ondeck');
+  od.innerHTML = '<b>ON DECK</b> ';
+  od.appendChild(document.createTextNode(next && next.id!==(cur&&cur.id) ? next.name : '—'));
+  card.appendChild(od);
+  app.appendChild(card);
+
+  // result buttons
+  var grid = el('div','resgrid');
+  RESULTS.forEach(function(r){
+    var b = el('button', r.key==='out'?'out':(r.key==='hr'?'hr':''), r.label);
+    b.addEventListener('click', function(){ logResult(r.key); });
+    grid.appendChild(b);
+  });
+  app.appendChild(grid);
+
+  var top = el('div','topbtns');
+  var undoB = el('button','btn-ghost','↩ Undo Last');
+  undoB.disabled = g.log.length===0;
+  if(undoB.disabled) undoB.style.opacity=.4;
+  undoB.addEventListener('click', undoLast);
+  var endB = el('button','btn-red','End Game');
+  endB.addEventListener('click', endGame);
+  top.appendChild(undoB); top.appendChild(endB);
+  app.appendChild(top);
+
+  // order list
+  var panel = el('div','panel');
+  panel.appendChild(el('h2',null,'Batting Order'));
+  g.order.forEach(function(id, i){
+    var p = findById(id);
+    if(!p) return;
+    var row = el('div','row'+(i===g.idx?' now':''));
+    row.appendChild(el('span','num',''+(i+1)));
+    var pname = el('span','pname', p.name);
+    pname.addEventListener('click', function(){ g.idx=i; render(); save(); });
+    row.appendChild(pname);
+    row.appendChild(el('span','line', todayLine(id)));
+    if(p.pos) row.appendChild(el('span','badge',p.pos));
+    panel.appendChild(row);
+  });
+  app.appendChild(panel);
+}
+
+/* ===================== STATS VIEW ===================== */
+function renderStats(){
+  app.innerHTML = '';
+  app.appendChild(el('h1', null, 'Season Stats'));
+  app.appendChild(el('p','sub','Totals from every game, saved on this phone.'));
+
+  var top = el('div','topbtns');
+  var backB = el('button','btn-gold','← Back to Lineup');
+  backB.addEventListener('click', function(){ view='setup'; render(); });
+  top.appendChild(backB);
+  app.appendChild(top);
+
+  var ids = Object.keys(S.stats).filter(function(id){
+    var st = S.stats[id];
+    return st.g>0 || st.ab>0 || st.bb>0;
+  });
+
+  var panel = el('div','panel');
+  if(ids.length===0){
+    panel.appendChild(el('div','empty','No stats yet — play a game and they\'ll show up here.'));
+  }else{
+    ids.sort(function(a,b){
+      var A=S.stats[a], B=S.stats[b];
+      var aa = A.ab>0?A.h/A.ab:-1, bb = B.ab>0?B.h/B.ab:-1;
+      return bb-aa;
+    });
+    var tbl = el('table');
+    var thead = el('thead');
+    var hr = el('tr');
+    ['Player','G','AB','H','HR','BB','AVG'].forEach(function(h){ hr.appendChild(el('th',null,h)); });
+    thead.appendChild(hr); tbl.appendChild(thead);
+    var tbody = el('tbody');
+    ids.forEach(function(id){
+      var st = S.stats[id];
+      var tr = el('tr');
+      tr.appendChild(el('td',null,st.name));
+      tr.appendChild(el('td',null,''+st.g));
+      tr.appendChild(el('td',null,''+st.ab));
+      tr.appendChild(el('td',null,''+st.h));
+      tr.appendChild(el('td',null,''+st.hr));
+      tr.appendChild(el('td',null,''+st.bb));
+      tr.appendChild(el('td','avg',fmtAvg(st)));
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    panel.appendChild(tbl);
+
+    var reset = el('button','fullbtn','Reset all season stats');
+    reset.style.marginTop='12px';
+    reset.addEventListener('click', function(){
+      if(confirm('Wipe ALL season stats? This can\'t be undone.')){
+        S.stats = {}; render(); save();
+      }
+    });
+    panel.appendChild(reset);
+  }
+  app.appendChild(panel);
+}
+
+/* ---------- setup actions ---------- */
 function addPlayer(){
-  var n = nameInput.value.trim();
+  var input = document.getElementById('nameInput');
+  var n = input.value.trim();
   if(!n) return;
-  players.push({id:nextId++, name:n, pos:null});
-  nameInput.value = '';
-  nameInput.focus();
+  S.players.push({id:S.nextId++, name:n, pos:null});
   render(); save();
+  var ni = document.getElementById('nameInput');
+  if(ni) ni.focus();
 }
-document.getElementById('addBtn').addEventListener('click', addPlayer);
-nameInput.addEventListener('keydown', function(e){ if(e.key==='Enter') addPlayer(); });
-
 function tapSlot(key){
   var occ = occupantOf(key);
   if(selected!==null){
@@ -284,43 +468,83 @@ function tapSlot(key){
     if(sel){
       var oldPos = sel.pos;
       sel.pos = key;
-      if(occ && occ.id!==sel.id) occ.pos = oldPos; // swap, or bench if sel had no spot
+      if(occ && occ.id!==sel.id) occ.pos = oldPos;
     }
-    selected = null;
-    render(); save();
+    selected = null; render(); save();
   }else if(occ){
-    selected = occ.id; // pick up whoever's there
-    render();
+    selected = occ.id; render();
   }
 }
-
 function moveRow(id, dir){
-  var i = players.findIndex(function(x){ return x.id===id; });
-  var j = i + dir;
-  if(i<0 || j<0 || j>=players.length) return;
-  var t = players[i]; players[i] = players[j]; players[j] = t;
+  var i = S.players.findIndex(function(x){ return x.id===id; });
+  var j = i+dir;
+  if(i<0 || j<0 || j>=S.players.length) return;
+  var t = S.players[i]; S.players[i]=S.players[j]; S.players[j]=t;
   render(); save();
 }
 
-clearBtn.addEventListener('click', function(){
-  players.forEach(function(p){ p.pos=null; });
+/* ---------- game actions ---------- */
+function startGame(){
+  if(S.players.length===0){ alert('Add some players first!'); return; }
+  if(!confirm('Lock this batting order and start the game?')) return;
+  S.game = { order: S.players.map(function(p){ return p.id; }), idx: 0, log: [] };
   selected = null;
+  view = 'game';
   render(); save();
-});
+}
+function logResult(res){
+  var g = S.game;
+  var id = g.order[g.idx];
+  var p = findById(id);
+  var st = statFor(id, p?p.name:'?');
+  var r = RESULTS.find(function(x){ return x.key===res; });
+  if(r.ab) st.ab++;
+  if(r.hit) st.h++;
+  if(res==='hr') st.hr++;
+  if(res==='bb') st.bb++;
+  g.log.push({id:id, res:res, idx:g.idx});
+  g.idx = (g.idx+1) % g.order.length;
+  render(); save();
+}
+function undoLast(){
+  var g = S.game;
+  var e = g.log.pop();
+  if(!e) return;
+  var st = S.stats[e.id];
+  var r = RESULTS.find(function(x){ return x.key===e.res; });
+  if(st){
+    if(r.ab) st.ab--;
+    if(r.hit) st.h--;
+    if(e.res==='hr') st.hr--;
+    if(e.res==='bb') st.bb--;
+  }
+  g.idx = e.idx;
+  render(); save();
+}
+function endGame(){
+  if(!confirm('End the game? At-bats are saved to season stats.')) return;
+  S.game.order.forEach(function(id){
+    var p = findById(id);
+    statFor(id, p?p.name:undefined).g++;
+  });
+  S.game = null;
+  view = 'stats';
+  render(); save();
+}
 
-/* ---------- drag-to-reorder ---------- */
+/* ---------- drag-to-reorder (setup only) ---------- */
 document.addEventListener('pointermove', function(e){
   if(dragId===null) return;
-  var el = document.elementFromPoint(e.clientX, e.clientY);
-  var row = el && el.closest ? el.closest('.row') : null;
-  if(!row) return;
+  var elp = document.elementFromPoint(e.clientX, e.clientY);
+  var row = elp && elp.closest ? elp.closest('.row') : null;
+  if(!row || !row.dataset.rowid) return;
   var overId = Number(row.dataset.rowid);
   if(overId===dragId) return;
-  var from = players.findIndex(function(x){ return x.id===dragId; });
-  var to = players.findIndex(function(x){ return x.id===overId; });
+  var from = S.players.findIndex(function(x){ return x.id===dragId; });
+  var to = S.players.findIndex(function(x){ return x.id===overId; });
   if(from<0 || to<0) return;
-  var m = players.splice(from,1)[0];
-  players.splice(to,0,m);
+  var m = S.players.splice(from,1)[0];
+  S.players.splice(to,0,m);
   render();
 });
 document.addEventListener('pointerup', function(){
@@ -329,10 +553,28 @@ document.addEventListener('pointerup', function(){
   render(); save();
 });
 
+/* ---------- field art ---------- */
+function fieldSVG(){
+  return '<svg viewBox="0 0 100 96" preserveAspectRatio="none" aria-hidden="true">'+
+  '<rect width="100" height="96" fill="#2f7d46"/>'+
+  '<rect y="0" width="100" height="8" fill="#28703e"/>'+
+  '<rect y="16" width="100" height="8" fill="#28703e"/>'+
+  '<rect y="32" width="100" height="8" fill="#28703e"/>'+
+  '<circle cx="50" cy="66" r="28" fill="#c08447"/>'+
+  '<path d="M50 87 L72 65 L50 43 L28 65 Z" fill="none" stroke="#f6f2e6" stroke-width="1"/>'+
+  '<line x1="50" y1="87" x2="4" y2="41" stroke="#f6f2e6" stroke-width="1"/>'+
+  '<line x1="50" y1="87" x2="96" y2="41" stroke="#f6f2e6" stroke-width="1"/>'+
+  '<circle cx="50" cy="66" r="5.5" fill="#b2763a" stroke="#f6f2e6" stroke-width=".7"/>'+
+  '<rect x="70" y="63" width="4" height="4" fill="#f6f2e6" transform="rotate(45 72 65)"/>'+
+  '<rect x="48" y="41" width="4" height="4" fill="#f6f2e6" transform="rotate(45 50 43)"/>'+
+  '<rect x="26" y="63" width="4" height="4" fill="#f6f2e6" transform="rotate(45 28 65)"/>'+
+  '<path d="M48 85 L52 85 L52 87.5 L50 89.5 L48 87.5 Z" fill="#f6f2e6"/>'+
+  '</svg>';
+}
+
 load();
 render();
 
-/* ---------- offline support ---------- */
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').catch(function(){});
 }
