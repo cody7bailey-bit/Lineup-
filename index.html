@@ -13,6 +13,7 @@
   :root{
     --night:#12200f; --panel:#1c2f18; --panel2:#243a1e; --ink:#f2eee0;
     --accent:#f6c445; --danger:#e07856; --chalk:#f6f2e6; --dim:#93a789;
+    --sub:#7fc4ea;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--night); color:var(--ink);
@@ -29,7 +30,6 @@
   .btn-ghost{background:transparent; color:#a9bd9e; border:1px solid #486340 !important;}
   .btn-red{background:transparent; color:var(--danger); border:1px solid #6b4032 !important;}
 
-  /* selection banner */
   #banner{min-height:34px; margin-bottom:8px; border-radius:10px; padding:6px 12px;
     display:flex; align-items:center; justify-content:space-between; gap:8px;
     font-weight:700; font-size:15px; letter-spacing:.5px;
@@ -55,6 +55,9 @@
     color:#22381c; font-weight:700; font-size:14px; letter-spacing:.5px;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     box-shadow:0 2px 5px rgba(0,0,0,.4);}
+  .slot .subchip{max-width:84px; margin-top:1px; padding:2px 8px; border-radius:12px;
+    background:rgba(127,196,234,.9); color:#0f2733; font-weight:700; font-size:11px;
+    letter-spacing:.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   body.targeting .slot .spot{border-color:var(--accent); background:rgba(246,196,69,.35);}
   body.targeting .slot .chip{outline:3px solid var(--accent);}
   .slot .chip.sel{background:var(--accent); outline:none !important;}
@@ -86,6 +89,7 @@
   .row .badge{font-size:13px; font-weight:700; letter-spacing:1px; border-radius:8px;
     padding:3px 8px; background:#38542c; color:var(--chalk);}
   .row .badge.none{background:transparent; color:#7d9472; border:1px dashed #55704a;}
+  .row .badge.subrole{background:rgba(127,196,234,.9); color:#0f2733;}
   .row .line{font-size:14px; font-weight:600; color:var(--dim);}
   .row .arrow, .row .del{background:none; border:none; font-size:18px; padding:2px 4px;}
   .row .arrow{color:var(--dim);}
@@ -113,20 +117,38 @@
   .resgrid .out{background:#5a3a30; color:var(--chalk);}
   .resgrid .hr{background:var(--accent);}
 
-  /* stats table */
-  table{width:100%; border-collapse:collapse;}
-  th{font-size:13px; font-weight:700; letter-spacing:1px; color:var(--accent);
-    text-transform:uppercase; text-align:right; padding:6px 4px; border-bottom:1px solid #3a5530;}
-  th:first-child{text-align:left;}
-  td{font-size:16px; font-weight:600; text-align:right; padding:8px 4px;
-    border-bottom:1px solid #2a4022;}
-  td:first-child{text-align:left; max-width:110px; overflow:hidden;
-    text-overflow:ellipsis; white-space:nowrap;}
-  td.avg{color:var(--accent); font-weight:700;}
+  /* subs rows */
+  .subrow{display:flex; align-items:center; gap:8px; background:var(--panel2);
+    border-radius:10px; padding:8px; margin-bottom:6px;}
+  .subrow .pos{font-size:14px; font-weight:700; letter-spacing:1px; background:#38542c;
+    color:var(--chalk); border-radius:8px; padding:3px 8px; min-width:34px; text-align:center;}
+  .subrow .names{flex:1; min-width:0; font-size:16px; font-weight:600;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .subrow .names em{font-style:normal; color:var(--sub); font-weight:700;}
+  .subrow .swap{background:var(--sub); color:#0f2733; border:none; border-radius:9px;
+    padding:8px 12px; font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase;}
+
+  /* sheet */
+  #sheet{position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.6);
+    display:none; align-items:flex-end;}
+  #sheet.open{display:flex;}
+  .sheetbox{width:100%; max-width:520px; margin:0 auto; background:var(--panel);
+    border-radius:16px 16px 0 0; padding:16px 14px 22px;}
+  .sheetbox h3{margin:0 0 4px; font-size:20px; font-weight:700; letter-spacing:1.5px;
+    color:var(--accent); text-transform:uppercase;}
+  .sheetbox p{margin:0 0 12px; font-size:15px; color:var(--dim); font-weight:500;}
+  .sheetbox .opt{width:100%; display:block; margin-bottom:8px; border:none; border-radius:11px;
+    padding:14px; font-size:16px; font-weight:700; letter-spacing:.5px; text-align:left;
+    background:var(--panel2); color:var(--ink);}
+  .sheetbox .opt.gold{background:var(--accent); color:#2c250a;}
+  .sheetbox .opt.blue{background:var(--sub); color:#0f2733;}
+  .sheetbox .opt.red{background:transparent; border:1px solid #6b4032; color:var(--danger);}
+  .sheetbox .opt small{display:block; font-weight:600; opacity:.75; font-size:13px; margin-top:2px;}
 </style>
 </head>
 <body>
 <div class="wrap" id="app"></div>
+<div id="sheet"><div class="sheetbox" id="sheetbox"></div></div>
 
 <script>
 var POSITIONS = [
@@ -146,47 +168,46 @@ var RESULTS = [
 ];
 
 var S = {
-  players: [],   // [{id, name, pos}]
+  players: [],   // [{id, name, pos, role}]  role: 'main' | 'sub'
   nextId: 1,
-  stats: {},     // id -> {name, g, ab, h, hr, bb}
-  game: null,    // {order:[ids], idx, log:[{id, res, idx}]}
+  stats: {},
+  game: null,
 };
-var view = 'setup';   // setup | game | stats
+var view = 'setup';
 var selected = null;
 var dragId = null;
 
 /* ---------- persistence ---------- */
-function save(){
-  try{ localStorage.setItem('softball-lineup-v2', JSON.stringify(S)); }catch(e){}
-}
+function save(){ try{ localStorage.setItem('softball-lineup-v2', JSON.stringify(S)); }catch(e){} }
 function load(){
   try{
     var raw = localStorage.getItem('softball-lineup-v2');
     if(raw){ S = JSON.parse(raw); }
     else{
-      // migrate roster from the first version of the app
       var old = localStorage.getItem('softball-lineup');
       if(old){ var d = JSON.parse(old); S.players = d.players||[]; S.nextId = d.nextId||1; }
     }
   }catch(e){}
   if(!S.stats) S.stats = {};
-  if(S.game) view = 'game'; // resume a game if the phone locked mid-inning
+  // anyone saved before subs existed is a main
+  S.players.forEach(function(p){ if(!p.role) p.role = 'main'; });
+  if(S.game) view = 'game';
 }
 
 /* ---------- helpers ---------- */
 function findById(id){ return S.players.find(function(p){ return p.id===id; }) || null; }
-function occupantOf(key){ return S.players.find(function(p){ return p.pos===key; }) || null; }
+function mainOf(key){ return S.players.find(function(p){ return p.pos===key && p.role==='main'; }) || null; }
+function subsOf(key){ return S.players.filter(function(p){ return p.pos===key && p.role==='sub'; }); }
 function statFor(id, name){
   if(!S.stats[id]) S.stats[id] = {name:name, g:0, ab:0, h:0, hr:0, bb:0};
   if(name) S.stats[id].name = name;
   return S.stats[id];
 }
-function avg(st){ return st.ab>0 ? ('.'+Math.round(st.h/st.ab*1000+'').padStart(3,'0')).replace('.1000','1.000') : '—'; }
 function fmtAvg(st){
   if(st.ab===0) return '—';
   var a = st.h/st.ab;
   if(a>=1) return '1.000';
-  return a.toFixed(3).slice(1); // .667
+  return a.toFixed(3).slice(1);
 }
 function todayLine(id){
   if(!S.game) return '';
@@ -201,17 +222,6 @@ function todayLine(id){
   if(ab===0 && h===0) return '0-0 today';
   return h+'-'+ab+' today'+(hr?(' · '+hr+' HR'):'');
 }
-
-/* ---------- render ---------- */
-var app = document.getElementById('app');
-
-function render(){
-  document.body.classList.toggle('targeting', view==='setup' && selected!==null);
-  if(view==='setup') renderSetup();
-  else if(view==='game') renderGame();
-  else renderStats();
-}
-
 function el(tag, cls, txt){
   var e = document.createElement(tag);
   if(cls) e.className = cls;
@@ -219,11 +229,42 @@ function el(tag, cls, txt){
   return e;
 }
 
-/* ===================== SETUP VIEW ===================== */
+/* ---------- bottom sheet ---------- */
+var sheet = document.getElementById('sheet');
+var sheetbox = document.getElementById('sheetbox');
+sheet.addEventListener('click', function(e){ if(e.target===sheet) closeSheet(); });
+function closeSheet(){ sheet.classList.remove('open'); sheetbox.innerHTML=''; }
+function openSheet(title, subtitle, options){
+  sheetbox.innerHTML = '';
+  sheetbox.appendChild(el('h3', null, title));
+  if(subtitle) sheetbox.appendChild(el('p', null, subtitle));
+  options.forEach(function(o){
+    var b = el('button', 'opt'+(o.style?' '+o.style:''));
+    b.appendChild(document.createTextNode(o.label));
+    if(o.note){ var s = el('small', null, o.note); b.appendChild(s); }
+    b.addEventListener('click', function(){ closeSheet(); if(o.fn) o.fn(); });
+    sheetbox.appendChild(b);
+  });
+  var c = el('button','opt','Cancel');
+  c.addEventListener('click', closeSheet);
+  sheetbox.appendChild(c);
+  sheet.classList.add('open');
+}
+
+/* ---------- render ---------- */
+var app = document.getElementById('app');
+function render(){
+  document.body.classList.toggle('targeting', view==='setup' && selected!==null);
+  if(view==='setup') renderSetup();
+  else if(view==='game') renderGame();
+  else renderStats();
+}
+
+/* ===================== SETUP ===================== */
 function renderSetup(){
   app.innerHTML = '';
   app.appendChild(el('h1', null, 'Lineup Board'));
-  app.appendChild(el('p', 'sub', 'Tap a name, then tap a spot. Arrows or ≡ set the batting order.'));
+  app.appendChild(el('p','sub','Tap a name then a spot. Tap a filled spot to add a sub or make changes.'));
 
   var top = el('div','topbtns');
   var startB = el('button','btn-gold','⚾ Lock & Start Game');
@@ -233,47 +274,46 @@ function renderSetup(){
   top.appendChild(startB); top.appendChild(statsB);
   app.appendChild(top);
 
-  // banner
   var banner = el('div'); banner.id='banner';
   var sel = selected!==null ? findById(selected) : null;
   if(sel){
     banner.className='active';
-    var txt = el('span','txt', sel.name+' — tap a position');
+    banner.appendChild(el('span','txt', sel.name+' — tap a position'));
     var btns = el('span','btns');
     if(sel.pos){
       var bench = el('button',null,'Bench');
-      bench.addEventListener('click', function(){ sel.pos=null; selected=null; render(); save(); });
+      bench.addEventListener('click', function(){ sel.pos=null; sel.role='main'; selected=null; render(); save(); });
       btns.appendChild(bench);
     }
     var cancel = el('button',null,'Cancel');
     cancel.addEventListener('click', function(){ selected=null; render(); });
     btns.appendChild(cancel);
-    banner.appendChild(txt); banner.appendChild(btns);
+    banner.appendChild(btns);
   }else{
     banner.appendChild(el('span','txt','No player selected'));
   }
   app.appendChild(banner);
 
-  // field
   var field = el('div','field');
   field.innerHTML = fieldSVG();
   POSITIONS.forEach(function(pos){
     var b = el('button','slot');
     b.style.left = pos.x+'%'; b.style.top = pos.y+'%';
     b.appendChild(el('span','tag',pos.key));
-    var occ = occupantOf(pos.key);
-    if(occ){
-      var chip = el('span','chip'+(selected===occ.id?' sel':''), occ.name);
-      b.appendChild(chip);
+    var m = mainOf(pos.key), subs = subsOf(pos.key);
+    if(m){
+      b.appendChild(el('span','chip'+(selected===m.id?' sel':''), m.name));
     }else{
       b.appendChild(el('span','spot'));
     }
+    subs.forEach(function(s){
+      b.appendChild(el('span','subchip', s.name));
+    });
     b.addEventListener('click', function(){ tapSlot(pos.key); });
     field.appendChild(b);
   });
   app.appendChild(field);
 
-  // roster panel
   var panel = el('div','panel');
   panel.appendChild(el('h2',null,'Roster · Batting Order'));
 
@@ -302,7 +342,8 @@ function renderSetup(){
     pname.addEventListener('click', function(){
       selected = (selected===p.id) ? null : p.id; render();
     });
-    var badge = el('span','badge'+(p.pos?'':' none'), p.pos||'—');
+    var label = p.pos ? (p.role==='sub' ? p.pos+' SUB' : p.pos) : '—';
+    var badge = el('span','badge'+(p.pos?(p.role==='sub'?' subrole':''):' none'), label);
     var up = el('button','arrow','▲'); up.disabled=(i===0);
     up.addEventListener('click', function(){ moveRow(p.id,-1); });
     var down = el('button','arrow','▼'); down.disabled=(i===S.players.length-1);
@@ -323,7 +364,7 @@ function renderSetup(){
   if(S.players.length>0){
     var clr = el('button','fullbtn','Clear all positions');
     clr.addEventListener('click', function(){
-      S.players.forEach(function(p){ p.pos=null; });
+      S.players.forEach(function(p){ p.pos=null; p.role='main'; });
       selected=null; render(); save();
     });
     panel.appendChild(clr);
@@ -331,12 +372,60 @@ function renderSetup(){
   app.appendChild(panel);
 }
 
-/* ===================== GAME VIEW ===================== */
+/* ---------- slot tapping ---------- */
+function tapSlot(key){
+  var m = mainOf(key), subs = subsOf(key);
+
+  // A player is picked up — where do they go?
+  if(selected!==null){
+    var sel = findById(selected);
+    if(!sel) { selected=null; return render(); }
+    if(!m){ assign(sel, key, 'main'); return; }
+    if(m.id===sel.id){ selected=null; return render(); }
+    openSheet(key, sel.name + ' → ' + key + ' (currently ' + m.name + ')', [
+      {label:'Make Starter', note: m.name+' drops to sub', style:'gold',
+        fn:function(){ m.role='sub'; assign(sel, key, 'main'); }},
+      {label:'Add as Sub', note:'backs up '+m.name, style:'blue',
+        fn:function(){ assign(sel, key, 'sub'); }},
+      {label:'Swap with '+m.name, note:'they trade spots',
+        fn:function(){ var oldPos=sel.pos, oldRole=sel.role||'main';
+          assign(sel, key, 'main'); m.pos=oldPos; m.role=oldPos?oldRole:'main'; render(); save(); }},
+    ]);
+    return;
+  }
+
+  // Nothing picked up — manage who's already here
+  if(!m && subs.length===0) return;
+  var opts = [];
+  if(m){
+    opts.push({label:'Move '+m.name, note:'then tap a new spot',
+      fn:function(){ selected=m.id; render(); }});
+  }
+  subs.forEach(function(s){
+    opts.push({label:'Start '+s.name, note:'swap in for '+(m?m.name:'nobody'), style:'gold',
+      fn:function(){ if(m) m.role='sub'; s.role='main'; render(); save(); }});
+  });
+  if(m){
+    opts.push({label:'Bench '+m.name, style:'red',
+      fn:function(){ m.pos=null; m.role='main'; render(); save(); }});
+  }
+  subs.forEach(function(s){
+    opts.push({label:'Bench '+s.name+' (sub)', style:'red',
+      fn:function(){ s.pos=null; s.role='main'; render(); save(); }});
+  });
+  openSheet(key, (m?m.name:'No starter') + (subs.length? ' · '+subs.length+' sub'+(subs.length>1?'s':'') : ''), opts);
+}
+function assign(p, key, role){
+  p.pos = key; p.role = role;
+  selected = null;
+  render(); save();
+}
+
+/* ===================== GAME ===================== */
 function renderGame(){
   app.innerHTML = '';
   var g = S.game;
-  var order = g.order.map(findById).filter(Boolean);
-  if(order.length===0){ S.game=null; view='setup'; render(); return; }
+  if(g.order.map(findById).filter(Boolean).length===0){ S.game=null; view='setup'; return render(); }
   if(g.idx >= g.order.length) g.idx = 0;
   var cur = findById(g.order[g.idx]);
   var next = findById(g.order[(g.idx+1)%g.order.length]);
@@ -344,18 +433,18 @@ function renderGame(){
   app.appendChild(el('h1', null, 'Game On'));
   app.appendChild(el('p','sub','Tap the result of each at-bat. Tap a name below to jump the order.'));
 
-  // now batting card
   var card = el('div','nowcard');
   card.appendChild(el('div','lbl','Now Batting · #'+(g.idx+1)));
   card.appendChild(el('div','bname', cur ? cur.name : '—'));
-  card.appendChild(el('div','meta', (cur&&cur.pos?cur.pos+' · ':'')+todayLine(cur?cur.id:-1)));
+  var posTxt = '';
+  if(cur && cur.pos) posTxt = cur.pos + (cur.role==='sub'?' (sub)':'') + ' · ';
+  card.appendChild(el('div','meta', posTxt + todayLine(cur?cur.id:-1)));
   var od = el('div','ondeck');
   od.innerHTML = '<b>ON DECK</b> ';
-  od.appendChild(document.createTextNode(next && next.id!==(cur&&cur.id) ? next.name : '—'));
+  od.appendChild(document.createTextNode(next && (!cur || next.id!==cur.id) ? next.name : '—'));
   card.appendChild(od);
   app.appendChild(card);
 
-  // result buttons
   var grid = el('div','resgrid');
   RESULTS.forEach(function(r){
     var b = el('button', r.key==='out'?'out':(r.key==='hr'?'hr':''), r.label);
@@ -374,7 +463,34 @@ function renderGame(){
   top.appendChild(undoB); top.appendChild(endB);
   app.appendChild(top);
 
-  // order list
+  // subs available to swap in mid-game
+  var withSubs = POSITIONS.filter(function(pos){ return subsOf(pos.key).length>0; });
+  if(withSubs.length){
+    var sp = el('div','panel');
+    sp.appendChild(el('h2',null,'Subs · Tap to Swap'));
+    withSubs.forEach(function(pos){
+      var m = mainOf(pos.key);
+      subsOf(pos.key).forEach(function(s){
+        var r = el('div','subrow');
+        r.appendChild(el('span','pos',pos.key));
+        var names = el('span','names');
+        names.appendChild(document.createTextNode((m?m.name:'—')+'  ←  '));
+        var em = el('em', null, s.name);
+        names.appendChild(em);
+        r.appendChild(names);
+        var b = el('button','swap','Swap In');
+        b.addEventListener('click', function(){
+          if(m) m.role='sub';
+          s.role='main';
+          render(); save();
+        });
+        r.appendChild(b);
+        sp.appendChild(r);
+      });
+    });
+    app.appendChild(sp);
+  }
+
   var panel = el('div','panel');
   panel.appendChild(el('h2',null,'Batting Order'));
   g.order.forEach(function(id, i){
@@ -386,13 +502,13 @@ function renderGame(){
     pname.addEventListener('click', function(){ g.idx=i; render(); save(); });
     row.appendChild(pname);
     row.appendChild(el('span','line', todayLine(id)));
-    if(p.pos) row.appendChild(el('span','badge',p.pos));
+    if(p.pos) row.appendChild(el('span','badge'+(p.role==='sub'?' subrole':''), p.pos+(p.role==='sub'?' SUB':'')));
     panel.appendChild(row);
   });
   app.appendChild(panel);
 }
 
-/* ===================== STATS VIEW ===================== */
+/* ===================== STATS ===================== */
 function renderStats(){
   app.innerHTML = '';
   app.appendChild(el('h1', null, 'Season Stats'));
@@ -415,24 +531,18 @@ function renderStats(){
   }else{
     ids.sort(function(a,b){
       var A=S.stats[a], B=S.stats[b];
-      var aa = A.ab>0?A.h/A.ab:-1, bb = B.ab>0?B.h/B.ab:-1;
-      return bb-aa;
+      return (B.ab>0?B.h/B.ab:-1) - (A.ab>0?A.h/A.ab:-1);
     });
     var tbl = el('table');
-    var thead = el('thead');
     var hr = el('tr');
     ['Player','G','AB','H','HR','BB','AVG'].forEach(function(h){ hr.appendChild(el('th',null,h)); });
-    thead.appendChild(hr); tbl.appendChild(thead);
+    var thead = el('thead'); thead.appendChild(hr); tbl.appendChild(thead);
     var tbody = el('tbody');
     ids.forEach(function(id){
       var st = S.stats[id];
       var tr = el('tr');
       tr.appendChild(el('td',null,st.name));
-      tr.appendChild(el('td',null,''+st.g));
-      tr.appendChild(el('td',null,''+st.ab));
-      tr.appendChild(el('td',null,''+st.h));
-      tr.appendChild(el('td',null,''+st.hr));
-      tr.appendChild(el('td',null,''+st.bb));
+      ['g','ab','h','hr','bb'].forEach(function(k){ tr.appendChild(el('td',null,''+st[k])); });
       tr.appendChild(el('td','avg',fmtAvg(st)));
       tbody.appendChild(tr);
     });
@@ -442,38 +552,22 @@ function renderStats(){
     var reset = el('button','fullbtn','Reset all season stats');
     reset.style.marginTop='12px';
     reset.addEventListener('click', function(){
-      if(confirm('Wipe ALL season stats? This can\'t be undone.')){
-        S.stats = {}; render(); save();
-      }
+      if(confirm('Wipe ALL season stats? This can\'t be undone.')){ S.stats = {}; render(); save(); }
     });
     panel.appendChild(reset);
   }
   app.appendChild(panel);
 }
 
-/* ---------- setup actions ---------- */
+/* ---------- actions ---------- */
 function addPlayer(){
   var input = document.getElementById('nameInput');
   var n = input.value.trim();
   if(!n) return;
-  S.players.push({id:S.nextId++, name:n, pos:null});
+  S.players.push({id:S.nextId++, name:n, pos:null, role:'main'});
   render(); save();
   var ni = document.getElementById('nameInput');
   if(ni) ni.focus();
-}
-function tapSlot(key){
-  var occ = occupantOf(key);
-  if(selected!==null){
-    var sel = findById(selected);
-    if(sel){
-      var oldPos = sel.pos;
-      sel.pos = key;
-      if(occ && occ.id!==sel.id) occ.pos = oldPos;
-    }
-    selected = null; render(); save();
-  }else if(occ){
-    selected = occ.id; render();
-  }
 }
 function moveRow(id, dir){
   var i = S.players.findIndex(function(x){ return x.id===id; });
@@ -482,14 +576,11 @@ function moveRow(id, dir){
   var t = S.players[i]; S.players[i]=S.players[j]; S.players[j]=t;
   render(); save();
 }
-
-/* ---------- game actions ---------- */
 function startGame(){
   if(S.players.length===0){ alert('Add some players first!'); return; }
   if(!confirm('Lock this batting order and start the game?')) return;
   S.game = { order: S.players.map(function(p){ return p.id; }), idx: 0, log: [] };
-  selected = null;
-  view = 'game';
+  selected = null; view = 'game';
   render(); save();
 }
 function logResult(res){
@@ -527,12 +618,11 @@ function endGame(){
     var p = findById(id);
     statFor(id, p?p.name:undefined).g++;
   });
-  S.game = null;
-  view = 'stats';
+  S.game = null; view = 'stats';
   render(); save();
 }
 
-/* ---------- drag-to-reorder (setup only) ---------- */
+/* ---------- drag-to-reorder ---------- */
 document.addEventListener('pointermove', function(e){
   if(dragId===null) return;
   var elp = document.elementFromPoint(e.clientX, e.clientY);
